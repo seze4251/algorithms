@@ -58,7 +58,7 @@ public:
 		if (idx_ == 0) {
 			throw std::runtime_error("Cannot get element b/c not elements are on stack");
 		}
-		return stack_[--idx_];
+		return std::move(stack_[--idx_]);
 	}
 
 private:
