@@ -4,9 +4,6 @@
 #include <stdlib.h>
 
 
-// TODO: Look at std::stack and fix user facing API
-//       Add missing methods, and adjust implementation to match theirs
-//       Think about how to implement move semantics
 // TODO: Look into a more C++ way to do realloc
 // TODO: 100% UT coverage with google test, requires more of a build system than command line g++ lol
 
@@ -14,8 +11,14 @@
 template <typename T>
 class Stack {
 public:
-	Stack(size_t capacity, bool auto_resize=true)
-		: capacity_(capacity), auto_resize_(auto_resize)
+	Stack()
+		: capacity_(1028)
+	{
+		stack_.reset(reinterpret_cast<T*>(malloc(capacity_*sizeof(T))));
+	}
+
+	Stack(size_t capacity)
+		: capacity_(capacity)
 	{
 		if (capacity == 0) {
 			throw std::runtime_error("Cannot create a stack with 0 capacity");
@@ -26,12 +29,41 @@ public:
 		stack_.reset(reinterpret_cast<T*>(malloc(capacity_*sizeof(T))));
 	}
 
-	void push(T data) {
-		if (idx_ == capacity_) {
-			if (!auto_resize_) {
-				throw std::runtime_error("Stack is full and cannot alloc b/c auto_resize is set to false");
-			}
+	bool empty() {
+		return idx_ == 0;
+	}
 
+	size_t size() {
+		return idx_;
+	}
+
+	size_t capacity() {
+		return capacity_;
+	}
+
+	void push(T& data) {
+		resize();
+		stack_[idx_] = data;
+		idx_++;
+	}
+
+	void push(T&& data) {
+		resize();
+		stack_[idx_] = std::move(data);
+		idx_++;
+	}
+
+	// Returns the top element in the stack, and removes it from the stack
+	T pop () {
+		if (idx_ == 0) {
+			throw std::runtime_error("Cannot get element b/c no elements are on the stack");
+		}
+		return std::move(stack_[--idx_]);
+	}
+
+private:
+	void resize() {
+		if (idx_ == capacity_) {
 			capacity_ = 2 * capacity_;
 			stack_.reset(reinterpret_cast<T*>(realloc(stack_.release(), capacity_*sizeof(T))));
 
@@ -39,31 +71,9 @@ public:
 				throw std::runtime_error("Failed to realloc stack");
 			}
 		}
-
-		stack_[idx_] = std::move(data);
-		idx_++;
 	}
 
-	// Returns a pointer to the top element in the stack
-	T* peek() {
-		if (idx_ == 0) {
-			return nullptr;
-		}
-
-		return &stack_[idx_-1];
-	}
-
-	// Returns the top element in the stack, and removes it from the stack
-	T pop () {
-		if (idx_ == 0) {
-			throw std::runtime_error("Cannot get element b/c not elements are on stack");
-		}
-		return std::move(stack_[--idx_]);
-	}
-
-private:
 	std::unique_ptr<T[]> stack_; ///< Structure that holds the stack
 	size_t idx_ = 0; ///< Index to insert into
 	size_t capacity_; ///< Maximum # of T elements allowed on vector
-	bool auto_resize_; ///< Allow users to get an exception instead of auto-resizing
 };
