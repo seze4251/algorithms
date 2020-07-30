@@ -7,7 +7,7 @@
 // TODO: Look into a more C++ way to do realloc
 // TODO: 100% UT coverage with google test, requires more of a build system than command line g++ lol
 
-
+// Ownership taking <sink>.
 template <typename T>
 class Stack {
 public:
