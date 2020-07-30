@@ -43,6 +43,7 @@ public:
 		for (int i = 0; i < capacity_ -1; i++) {
 			if (hash_table_[idx].key == key) {
 				hash_table_[idx].data.reset();
+				size--;
 				return;
 			}
 			idx = getNextIndex(idx, capacity_);
